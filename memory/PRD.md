@@ -16,6 +16,12 @@ Android app "SmartTradeLens": personal financial analysis & trade-setup assistan
 - Watchlist search (catalog + CoinGecko) / add / swipe remove; starter list seeded
 - Tested: iteration_1 backend 20/20, UI flows pass
 
+## Implemented (2026-10-10, round 2)
+- Custom strategy rules (per-user params: Super Trend period/mult, RSI period/zones, MA fast/slow/cross window, option-selling ADX/RSI) used by setups, charts, agent
+- Price level alerts (above/below, 60s checker; crypto live, stocks last daily close) → in-app alert + push
+- Emergent push relay: /api/register-push, send_push on agent alerts & price alerts; permission sheet, tap routing, weekly nudge. Needs google-services.json + published build.
+- Tested: iteration_2 backend 11/11, UI flows pass
+
 ## Backlog
-- P1: push notifications for agent alerts (needs build + google-services.json); custom strategy params; price alerts
+- P1: add google-services.json (user) and set android.googleServicesFile; shareable setup cards
 - P2: option-chain data, backtesting, trade journal; app icon from logo

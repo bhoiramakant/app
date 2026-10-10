@@ -3,13 +3,15 @@ import { useFonts } from "expo-font";
 import { SplashScreen, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import { LogBox, View } from "react-native";
+import * as Notifications from "expo-notifications";
+import { LogBox, Platform, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 
 import { AuthProvider, useAuth } from "@/src/auth";
 import { ErrorBoundary } from "@/src/components/error-boundary";
 import { Logo } from "@/src/components/Logo";
+import { PushManager } from "@/src/components/PushManager";
 import { ToastProvider } from "@/src/components/Toast";
 import { TradeSheetProvider } from "@/src/components/TradeSheet";
 import { queryClient } from "@/src/query-client";
@@ -19,6 +21,26 @@ import { colors } from "@/src/theme";
 // and agent works as expected.
 LogBox.ignoreAllLogs(true);
 SplashScreen.preventAutoHideAsync().catch(() => {});
+
+// Push: foreground display + Android channel, at module scope so they exist before any push arrives.
+if (Platform.OS !== "web") {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+    }),
+  });
+}
+if (Platform.OS === "android") {
+  Notifications.setNotificationChannelAsync("default", {
+    name: "Default",
+    importance: Notifications.AndroidImportance.MAX,
+    sound: "default",
+  });
+}
 
 function RootNav() {
   const { status } = useAuth();
@@ -46,6 +68,8 @@ function RootNav() {
         <Stack.Screen name="settings" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="watchlist" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="change-pin" options={{ animation: "slide_from_bottom" }} />
+        <Stack.Screen name="price-alerts" options={{ animation: "slide_from_right" }} />
+        <Stack.Screen name="strategy-settings" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="setup/[id]" options={{ animation: "slide_from_right" }} />
       </Stack.Protected>
     </Stack>
@@ -80,6 +104,7 @@ export default function RootLayout() {
                 <AuthProvider>
                   <StatusBar style="light" />
                   <RootNav />
+                  <PushManager />
                 </AuthProvider>
               </TradeSheetProvider>
             </ToastProvider>

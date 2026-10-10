@@ -16,7 +16,8 @@ import agent
 import catalog
 import market
 from db import Alert, User, WatchItem, client, db
-from strategies import STRATEGIES, chart_payload, evaluate
+import push
+from strategies import DEFAULT_PARAMS, PARAM_BOUNDS, STRATEGIES, chart_payload, evaluate
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 log = logging.getLogger("server")
@@ -179,7 +180,7 @@ async def search_symbols(q: str, user: User = Depends(current_user)):
 
 
 # ---------------------------------------------------------------- setups
-async def setup_for(it: dict, strategy: str, tf: str, q: dict | None = None) -> dict:
+async def setup_for(it: dict, strategy: str, tf: str, q: dict | None = None, p: dict | None = None) -> dict:
     d = await market.get_candles(it, tf)
     base = {"id": str(it["_id"]), "symbol": it["symbol"], "name": it["name"], "market": it["market"],
             "currency": it["currency"], "tv_symbol": it["tv_symbol"], "timeframe": tf, "strategy": strategy,
@@ -188,7 +189,7 @@ async def setup_for(it: dict, strategy: str, tf: str, q: dict | None = None) -> 
     base.update(price=q["price"], change_pct=q["change_pct"])
     if d["status"] != "ok":
         return {**base, "status": d["status"], "reason": d.get("reason")}
-    ev = evaluate(d["candles"], strategy, tf)
+    ev = evaluate(d["candles"], strategy, tf, p)
     if ev["status"] != "ok":
         return {**base, "status": ev["status"], "reason": ev["reason"]}
     if base["price"] is None:
@@ -205,7 +206,8 @@ def _check_params(strategy: str, timeframe: str):
 async def setups(strategy: str = "supertrend", timeframe: str = "daily", user: User = Depends(current_user)):
     _check_params(strategy, timeframe)
     items = await db.watchlist.find({"user_id": user.id}).sort("added_at", 1).to_list(200)
-    out = await asyncio.gather(*(setup_for(it, strategy, timeframe) for it in items))
+    p = await agent.user_params(user.id)
+    out = await asyncio.gather(*(setup_for(it, strategy, timeframe, None, p) for it in items))
     out = list(out)
     out.sort(key=lambda s: (s.get("status") != "ok", not s.get("ready"), not s.get("upcoming")))
     return {"items": out, "strategy": strategy, "timeframe": timeframe, "generated_at": market.now_iso()}
@@ -218,11 +220,12 @@ async def setup_detail(item_id: str, strategy: str = "supertrend", timeframe: st
     it = await db.watchlist.find_one({"_id": ObjectId(item_id), "user_id": user.id}) if ObjectId.is_valid(item_id) else None
     if not it:
         raise HTTPException(404, "Symbol not in watchlist")
-    s = await setup_for(it, strategy, timeframe)
+    p = await agent.user_params(user.id)
+    s = await setup_for(it, strategy, timeframe, None, p)
     others = {}
     for sk in STRATEGIES:  # quick summary across strategies
         if sk != strategy:
-            o = await setup_for(it, sk, timeframe, {"price": s["price"], "change_pct": s["change_pct"]})
+            o = await setup_for(it, sk, timeframe, {"price": s["price"], "change_pct": s["change_pct"]}, p)
             others[sk] = {k: o.get(k) for k in ("status", "direction", "ready", "upcoming", "met", "total")}
     return {**s, "others": others}
 
@@ -242,7 +245,7 @@ async def chart(item_id: str, timeframe: str = "daily", user: User = Depends(cur
     if d["status"] != "ok" or len(d["candles"]) < 2:
         return {**base, "status": d["status"] if d["status"] != "ok" else "insufficient",
                 "reason": d.get("reason") or "Not enough history"}
-    return {**base, "status": "ok", **chart_payload(d["candles"])}
+    return {**base, "status": "ok", **chart_payload(d["candles"], await agent.user_params(user.id))}
 
 
 # ---------------------------------------------------------------- dashboard
@@ -251,10 +254,11 @@ async def dashboard(user: User = Depends(current_user)):
     items = await db.watchlist.find({"user_id": user.id}).to_list(200)
     quotes = await asyncio.gather(*(market.quote(it) for it in items))
     qmap = {str(it["_id"]): q for it, q in zip(items, quotes)}
+    p = await agent.user_params(user.id)
     ready = upcoming = 0
     ready_list = []
     for sk in STRATEGIES:
-        res = await asyncio.gather(*(setup_for(it, sk, "daily", qmap[str(it["_id"])]) for it in items))
+        res = await asyncio.gather(*(setup_for(it, sk, "daily", qmap[str(it["_id"])], p) for it in items))
         for r in res:
             if r.get("ready"):
                 ready += 1
@@ -320,6 +324,96 @@ async def news(user: User = Depends(current_user)):
     return await agent.news_for_user(user.id)
 
 
+# ---------------------------------------------------------------- strategy settings
+@api.get("/settings/strategy")
+async def get_strategy_settings(user: User = Depends(current_user)):
+    return {"params": await agent.user_params(user.id), "defaults": DEFAULT_PARAMS, "bounds": PARAM_BOUNDS}
+
+
+@api.put("/settings/strategy")
+async def put_strategy_settings(body: dict, user: User = Depends(current_user)):
+    params = {**DEFAULT_PARAMS, **(body.get("params") or {})}
+    clean = {}
+    for k, default in DEFAULT_PARAMS.items():
+        try:
+            v = float(params[k])
+        except (TypeError, ValueError):
+            raise HTTPException(400, f"{k} must be a number")
+        lo, hi = PARAM_BOUNDS[k]
+        if not lo <= v <= hi:
+            raise HTTPException(400, f"{k} must be between {lo:g} and {hi:g}")
+        clean[k] = v if isinstance(default, float) else int(round(v))
+    if clean["ma_fast"] >= clean["ma_slow"]:
+        raise HTTPException(400, "Fast MA must be shorter than slow MA")
+    for a, b, label in (("rsi_bull_lo", "rsi_bull_hi", "Bullish RSI"), ("rsi_bear_lo", "rsi_bear_hi", "Bearish RSI"),
+                        ("opt_rsi_lo", "opt_rsi_hi", "Option-selling RSI")):
+        if clean[a] >= clean[b]:
+            raise HTTPException(400, f"{label} range: low must be below high")
+    await db.user_settings.update_one({"_id": user.id}, {"$set": {"params": clean}}, upsert=True)
+    return {"params": clean, "defaults": DEFAULT_PARAMS, "bounds": PARAM_BOUNDS}
+
+
+# ---------------------------------------------------------------- price alerts
+class PriceAlertIn(BaseModel):
+    item_id: str
+    condition: str  # above | below
+    target: float
+
+
+@api.get("/price-alerts")
+async def list_price_alerts(user: User = Depends(current_user)):
+    docs = await db.price_alerts.find({"user_id": user.id}).sort("created_at", -1).to_list(200)
+    return {"items": [agent.PriceAlert.from_mongo(d).model_dump() for d in docs]}
+
+
+@api.post("/price-alerts")
+async def create_price_alert(body: PriceAlertIn, user: User = Depends(current_user)):
+    if body.condition not in ("above", "below") or body.target <= 0:
+        raise HTTPException(400, "Choose above or below and a price greater than 0")
+    it = await db.watchlist.find_one({"_id": ObjectId(body.item_id), "user_id": user.id}) if ObjectId.is_valid(body.item_id) else None
+    if not it:
+        raise HTTPException(404, "Symbol not in watchlist")
+    if await db.price_alerts.count_documents({"user_id": user.id, "active": True}) >= 50:
+        raise HTTPException(400, "You can have up to 50 active price alerts")
+    q = await market.quote(it)
+    price = q["price"]
+    if price is not None:
+        if body.condition == "above" and body.target <= price:
+            raise HTTPException(400, f"Target must be above the current price ({price:g})")
+        if body.condition == "below" and body.target >= price:
+            raise HTTPException(400, f"Target must be below the current price ({price:g})")
+    pa = agent.PriceAlert(user_id=user.id, item_id=body.item_id, symbol=it["symbol"], market=it["market"],
+                          currency=it["currency"], condition=body.condition, target=body.target,
+                          price_at_create=price, created_at=market.now_iso())
+    res = await db.price_alerts.insert_one(pa.to_mongo())
+    pa.id = str(res.inserted_id)
+    return pa.model_dump()
+
+
+@api.delete("/price-alerts/{alert_id}")
+async def delete_price_alert(alert_id: str, user: User = Depends(current_user)):
+    if not ObjectId.is_valid(alert_id):
+        raise HTTPException(404, "Not found")
+    res = await db.price_alerts.delete_one({"_id": ObjectId(alert_id), "user_id": user.id})
+    if not res.deleted_count:
+        raise HTTPException(404, "Not found")
+    return {"ok": True}
+
+
+# ---------------------------------------------------------------- push
+class RegisterPushBody(BaseModel):
+    user_id: str | None = None
+    platform: str
+    device_token: str
+
+
+@api.post("/register-push", status_code=201)
+async def register_push(body: RegisterPushBody, user: User = Depends(current_user)):
+    # Always register under the authenticated user, whatever the client sent.
+    await push.register(user.id, body.platform, body.device_token)
+    return {"status": "registered"}
+
+
 @api.get("/")
 async def root():
     return {"app": "SmartTradeLens", "av_budget_left": await market.av_budget_left()}
@@ -339,6 +433,8 @@ async def startup():
     await db.alerts.create_index([("user_id", 1), ("created_at", -1)])
     _tasks.append(asyncio.create_task(market.refresher_loop()))
     _tasks.append(asyncio.create_task(agent.agent_loop()))
+    _tasks.append(asyncio.create_task(agent.price_alert_loop()))
+    await db.price_alerts.create_index([("active", 1)])
 
 
 @app.on_event("shutdown")

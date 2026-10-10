@@ -23,7 +23,7 @@ export function AlertItem({ a, onPress, index }: { a: AlertT; onPress?: () => vo
   const s = useStyles();
   const { colors } = useTheme();
   const tint =
-    a.kind === "ready" ? colors.brand : a.kind === "bearish" ? colors.error : a.kind === "upcoming" ? colors.warning : colors.faint;
+    a.kind === "price" ? colors.info : a.kind === "ready" ? colors.brand : a.kind === "bearish" ? colors.error : a.kind === "upcoming" ? colors.warning : colors.faint;
   return (
     <Pressy testID={`alert-item-${index}`} onPress={onPress} style={[s.alert, { borderLeftColor: tint }, a.read && s.read]}>
       <View style={{ flex: 1 }}>

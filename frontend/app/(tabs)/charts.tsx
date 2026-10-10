@@ -37,6 +37,9 @@ export type ChartData = {
   ma20?: (number | null)[];
   ma50?: (number | null)[];
   rsi?: (number | null)[];
+  st_label?: string;
+  ma_fast_len?: number;
+  ma_slow_len?: number;
 };
 
 const TFS = TIMEFRAMES.map((t) => ({ key: t.key, label: t.short }));
@@ -59,9 +62,9 @@ export function ChartBlock({ id, tf }: { id: string; tf: string }) {
     <View style={{ gap: 12 }}>
       <PriceChart close={d.close} supertrend={d.supertrend} stDir={d.st_dir} ma20={d.ma20} ma50={d.ma50} currency={d.currency} />
       <View style={s.legend}>
-        <Text style={[s.leg, { color: colors.success }]}>— Super Trend</Text>
-        <Text style={[s.leg, { color: colors.brand }]}>— MA 20</Text>
-        <Text style={[s.leg, { color: colors.info }]}>— MA 50</Text>
+        <Text style={[s.leg, { color: colors.success }]}>— {d.st_label ?? "Super Trend"}</Text>
+        <Text style={[s.leg, { color: colors.brand }]}>— MA {d.ma_fast_len ?? 20}</Text>
+        <Text style={[s.leg, { color: colors.info }]}>— MA {d.ma_slow_len ?? 50}</Text>
         <Text style={[s.leg, { color: colors.onSurface }]}>— Price</Text>
       </View>
       {d.rsi && <RsiStrip rsi={d.rsi} />}

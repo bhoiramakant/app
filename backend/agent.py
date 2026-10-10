@@ -11,11 +11,14 @@ from email.utils import parsedate_to_datetime
 from datetime import datetime, timezone
 
 import httpx
+from bson import ObjectId
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 import market
 from db import Alert, db
-from strategies import STRATEGIES, evaluate
+import push
+from db import BaseDocument
+from strategies import DEFAULT_PARAMS, STRATEGIES, evaluate
 
 log = logging.getLogger("agent")
 LLM_KEY = os.environ["EMERGENT_LLM_KEY"]
@@ -37,9 +40,81 @@ def _fmt(x):
     return None if x is None else round(x, 4 if abs(x) < 10 else 2)
 
 
+async def user_params(user_id: str) -> dict:
+    doc = await db.user_settings.find_one({"_id": user_id}) or {}
+    return {**DEFAULT_PARAMS, **(doc.get("params") or {})}
+
+
+class PriceAlert(BaseDocument):
+    user_id: str
+    item_id: str
+    symbol: str
+    market: str
+    currency: str
+    condition: str  # above | below
+    target: float
+    price_at_create: float | None = None
+    active: bool = True
+    triggered_at: str | None = None
+    triggered_price: float | None = None
+    created_at: str
+
+
+def _money(v: float, cur: str) -> str:
+    return ("₹" if cur == "INR" else "$") + (f"{v:,.4f}" if v < 1 else f"{v:,.2f}")
+
+
+async def check_price_alerts():
+    """Crypto prices are live (60s cache); stocks use the latest cached daily close."""
+    active = await db.price_alerts.find({"active": True}).to_list(2000)
+    if not active:
+        return
+    items = {}
+    for a in active:
+        if a["item_id"] not in items and ObjectId.is_valid(a["item_id"]):
+            items[a["item_id"]] = await db.watchlist.find_one({"_id": ObjectId(a["item_id"])})
+    quotes = {}
+    for iid, it in items.items():
+        if it:
+            quotes[iid] = (await market.quote(it))["price"]
+    for a in active:
+        it = items.get(a["item_id"])
+        if not it:  # symbol removed from watchlist
+            await db.price_alerts.update_one({"_id": a["_id"]}, {"$set": {"active": False}})
+            continue
+        price = quotes.get(a["item_id"])
+        if price is None:
+            continue
+        hit = price >= a["target"] if a["condition"] == "above" else price <= a["target"]
+        if not hit:
+            continue
+        res = await db.price_alerts.update_one({"_id": a["_id"], "active": True},
+                                               {"$set": {"active": False, "triggered_at": market.now_iso(),
+                                                         "triggered_price": price}})
+        if not res.modified_count:
+            continue
+        word = "rose above" if a["condition"] == "above" else "fell below"
+        title = f"{a['symbol']} · Price {word} {_money(a['target'], a['currency'])}"
+        body = f"Now {_money(price, a['currency'])}. Your price alert has fired. Check the setup before acting."
+        await db.alerts.insert_one(Alert(user_id=a["user_id"], symbol=a["symbol"], market=a["market"],
+                                         strategy="price", timeframe="daily", kind="price", title=title,
+                                         body=body, created_at=market.now_iso()).to_mongo())
+        await push.notify(a["user_id"], title, body, f"/setup/{a['item_id']}", key=f"pa-{a['_id']}")
+
+
+async def price_alert_loop():
+    while True:
+        try:
+            await check_price_alerts()
+        except Exception:
+            log.exception("price alert check failed")
+        await asyncio.sleep(60)
+
+
 # ---------------------------------------------------------------- setup agent
 async def collect_setups(user_id: str) -> list:
     items = await db.watchlist.find({"user_id": user_id}).to_list(200)
+    p = await user_params(user_id)
     found = []
     for it in items:
         for tf in SCAN_TFS:
@@ -47,7 +122,7 @@ async def collect_setups(user_id: str) -> list:
             if d["status"] != "ok":
                 continue
             for sk in STRATEGIES:
-                ev = evaluate(d["candles"], sk, tf)
+                ev = evaluate(d["candles"], sk, tf, p)
                 if ev["status"] != "ok" or not (ev["ready"] or ev["upcoming"]):
                     continue
                 found.append({"symbol": it["symbol"], "market": it["market"], "currency": it["currency"],
@@ -105,6 +180,9 @@ async def scan_user(user_id: str) -> int:
                                 timeframe=s["timeframe"], kind=a.get("kind", "upcoming"), title=a["title"][:90],
                                 body=a["body"][:240], created_at=market.now_iso()).to_mongo())
         await db.alerts.insert_many(alerts)
+        top = alerts[0]
+        more = f" (+{len(alerts) - 1} more)" if len(alerts) > 1 else ""
+        await push.notify(user_id, top["title"] + more, top["body"], "/alerts")
     await db.agent_state.update_one({"_id": user_id}, {"$set": {"states": states, "last_scan": market.now_iso()}},
                                     upsert=True)
     return len(alerts)

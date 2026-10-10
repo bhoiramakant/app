@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ScrollView, Switch, Text, View } from "react-native";
+import { Linking, ScrollView, Switch, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAuth } from "@/src/auth";
@@ -9,6 +9,7 @@ import { ScreenHeader } from "@/src/components/Header";
 import { Icon, IconName } from "@/src/components/Icon";
 import { Pressy } from "@/src/components/Pressy";
 import { useToast } from "@/src/components/Toast";
+import { getPushPermission, pushSupported, requestAndRegister } from "@/src/push";
 import { fonts, makeStyles, useTheme } from "@/src/theme";
 
 function Row({ icon, label, sub, onPress, right, testID, danger }: { icon: IconName; label: string; sub?: string; onPress?: () => void; right?: React.ReactNode; testID: string; danger?: boolean }) {
@@ -34,10 +35,28 @@ export default function Settings() {
   const toast = useToast();
   const { user, bioEnabled, setBioEnabled, lock, signOut } = useAuth();
   const [canBio, setCanBio] = useState(false);
+  const [perm, setPerm] = useState<{ status: string; canAskAgain: boolean } | null>(null);
 
   useEffect(() => {
     biometricAvailable().then(setCanBio);
+    getPushPermission().then(setPerm);
   }, []);
+
+  const pushSub = !pushSupported
+    ? "Available in the Android app (published build)"
+    : perm?.status === "granted"
+      ? "On · agent alerts and price alerts"
+      : "Off · tap to turn on";
+  const onPushPress = async () => {
+    if (perm?.status === "granted") return toast("Notifications are already on", "success");
+    if (perm?.canAskAgain && user) {
+      const st = await requestAndRegister(user.id);
+      setPerm(await getPushPermission());
+      if (st === "granted") toast("Notifications are on", "success");
+      return;
+    }
+    Linking.openSettings();
+  };
 
   return (
     <View style={s.root} testID="settings-screen">
@@ -73,9 +92,22 @@ export default function Settings() {
           <Row icon="lock-outline" label="Lock now" sub="Auto-locks 30s after leaving the app" testID="settings-lock-row" onPress={lock} />
         </View>
 
+        <Text style={s.sect}>Notifications</Text>
+        <View style={s.group}>
+          <Row
+            icon="bell-ring-outline"
+            label="Push notifications"
+            sub={pushSub}
+            testID="settings-notifications-row"
+            onPress={pushSupported ? onPushPress : undefined}
+          />
+        </View>
+
         <Text style={s.sect}>Markets</Text>
         <View style={s.group}>
           <Row icon="playlist-edit" label="Manage watchlist" testID="settings-watchlist-row" onPress={() => router.push("/watchlist")} />
+          <Row icon="tune-variant" label="Strategy rules" sub="Super Trend, MA lengths, RSI levels" testID="settings-strategy-row" onPress={() => router.push("/strategy-settings")} />
+          <Row icon="bell-plus-outline" label="Price alerts" sub="Get told when a symbol crosses your price" testID="settings-price-alerts-row" onPress={() => router.push("/price-alerts")} />
           <Row icon="database-outline" label="Data sources" sub="Stocks: Alpha Vantage (refreshed daily) · Crypto: CoinGecko (live)" testID="settings-data-row" />
         </View>
 

@@ -4,6 +4,9 @@ import { ActivityIndicator, RefreshControl, ScrollView, Text, View } from "react
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ChartBlock } from "@/app/(tabs)/charts";
+import { PriceAlertRow, usePriceAlerts } from "@/app/price-alerts";
+import { Icon } from "@/src/components/Icon";
+import { PriceAlertSheet, PriceAlertTarget } from "@/src/components/PriceAlertSheet";
 import { Empty } from "@/src/components/Bits";
 import { ChipRow } from "@/src/components/Chips";
 import { ScreenHeader } from "@/src/components/Header";
@@ -19,8 +22,8 @@ const LEVEL_LABELS: Record<string, string> = {
   close: "Last close",
   supertrend: "Super Trend",
   rsi: "RSI (14)",
-  ma20: "MA 20",
-  ma50: "MA 50",
+  ma_fast: "Fast MA",
+  ma_slow: "Slow MA",
   adx: "ADX (14)",
   bb_upper: "Upper band",
   bb_lower: "Lower band",
@@ -36,6 +39,9 @@ export default function SetupDetail() {
   const [tf, setTf] = useState(p.timeframe ?? "daily");
   const q = useCached<Detail>(["setup", p.id, strategy, tf], `/setups/${p.id}?strategy=${strategy}&timeframe=${tf}`);
   const d = q.data;
+  const [paTarget, setPaTarget] = useState<PriceAlertTarget | null>(null);
+  const pa = usePriceAlerts();
+  const myAlerts = (pa.data?.items ?? []).filter((a) => a.item_id === p.id && a.active);
   const up = (d?.change_pct ?? 0) >= 0;
   const idx = d?.symbol.toLowerCase() ?? "detail";
 
@@ -100,6 +106,26 @@ export default function SetupDetail() {
               </View>
             )}
 
+            <View style={s.sectRow}>
+              <Text style={[s.sect, { marginTop: 0, marginBottom: 0 }]}>Price alerts</Text>
+              <Pressy
+                testID="setup-add-price-alert-button"
+                haptic
+                onPress={() => setPaTarget({ id: p.id, symbol: d.symbol, currency: d.currency, price: d.price })}
+                style={s.paBtn}
+              >
+                <Icon name="bell-plus-outline" size={16} color={colors.onBrandSecondary} />
+                <Text style={s.paBtnText}>Price alert</Text>
+              </Pressy>
+            </View>
+            {myAlerts.length === 0 ? (
+              <Text style={s.paEmpty} testID="setup-price-alerts-empty">
+                No active alerts. Get notified when {d.symbol} crosses your level.
+              </Text>
+            ) : (
+              myAlerts.map((a, i) => <PriceAlertRow key={a.id} a={a} index={i} />)
+            )}
+
             <Text style={s.sect}>Chart</Text>
             <ChartBlock id={p.id} tf={tf} />
 
@@ -129,6 +155,7 @@ export default function SetupDetail() {
           </>
         )}
       </ScrollView>
+      <PriceAlertSheet target={paTarget} onClose={() => setPaTarget(null)} />
       {d && (
         <View style={[s.bottom, { paddingBottom: insets.bottom + 12 }]}>
           <TradeButtons item={d} idx="detail" />
@@ -160,6 +187,10 @@ const useStyles = makeStyles((c) => ({
   other: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: c.surfaceSecondary, borderRadius: 12, paddingHorizontal: 14, height: 48, borderWidth: 1, borderColor: c.border },
   otherName: { fontFamily: fonts.bold, fontSize: 13, color: c.onSurface },
   otherState: { fontFamily: fonts.bold, fontSize: 12, textTransform: "capitalize" },
+  sectRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 20, marginBottom: 10 },
+  paBtn: { flexDirection: "row", alignItems: "center", gap: 6, height: 36, paddingHorizontal: 12, borderRadius: 18, backgroundColor: c.brandSecondary },
+  paBtnText: { fontFamily: fonts.bold, fontSize: 12, color: c.onBrandSecondary },
+  paEmpty: { fontFamily: fonts.regular, fontSize: 12.5, color: c.muted },
   link: { fontFamily: fonts.bold, fontSize: 13, color: c.brand },
   bottom: { position: "absolute", left: 0, right: 0, bottom: 0, paddingHorizontal: 16, paddingTop: 12, backgroundColor: c.surface, borderTopWidth: 1, borderTopColor: c.divider },
 }));

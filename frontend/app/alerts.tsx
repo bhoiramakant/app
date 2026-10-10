@@ -81,6 +81,7 @@ export default function Alerts() {
         contentContainerStyle={[s.list, { paddingBottom: insets.bottom + 24 }]}
         refreshControl={<RefreshControl refreshing={q.isRefetching} onRefresh={() => q.refetch()} tintColor={colors.brand} colors={[colors.brand]} progressBackgroundColor={colors.surfaceSecondary} />}
         ListHeaderComponent={
+          <View>
           <View style={s.agent} testID="agent-card">
             <View style={s.agentIc}>
               <Icon name="robot-outline" size={22} color={colors.brand} />
@@ -92,6 +93,12 @@ export default function Alerts() {
             <Pressy testID="agent-scan-now-button" haptic disabled={scan.isPending} onPress={() => scan.mutate()} style={s.scanBtn}>
               {scan.isPending ? <ActivityIndicator size="small" color={colors.onBrandPrimary} /> : <Text style={s.scanText}>Scan now</Text>}
             </Pressy>
+          </View>
+          <Pressy testID="alerts-price-alerts-link" onPress={() => router.push("/price-alerts")} style={s.paLink}>
+            <Icon name="bell-plus-outline" size={18} color={colors.info} />
+            <Text style={s.paText}>Your price alerts</Text>
+            <Icon name="chevron-right" size={18} color={colors.faint} />
+          </Pressy>
           </View>
         }
         renderSectionHeader={({ section }) => <Text style={s.sect}>{section.title}</Text>}
@@ -125,5 +132,7 @@ const useStyles = makeStyles((c) => ({
   scanBtn: { height: 40, minWidth: 92, paddingHorizontal: 14, borderRadius: 12, backgroundColor: c.brandPrimary, alignItems: "center", justifyContent: "center" },
   scanText: { fontFamily: fonts.heavy, fontSize: 13, color: c.onBrandPrimary },
   sect: { fontFamily: fonts.heavy, fontSize: 12, color: c.muted, letterSpacing: 0.8, textTransform: "uppercase", marginTop: 20, marginBottom: 10 },
+  paLink: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 8, paddingHorizontal: 14, height: 48, borderRadius: 14, backgroundColor: c.surfaceSecondary, borderWidth: 1, borderColor: c.border },
+  paText: { fontFamily: fonts.bold, fontSize: 13, color: c.onSurface, flex: 1 },
   footer: { fontFamily: fonts.regular, fontSize: 12, color: c.faint, textAlign: "center", marginTop: 16 },
 }));

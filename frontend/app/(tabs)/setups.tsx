@@ -59,6 +59,7 @@ export default function Setups() {
         }
         right={
           <>
+            <IconButton icon="tune-variant" testID="header-strategy-settings-button" onPress={() => router.push("/strategy-settings")} />
             <IconButton icon="playlist-plus" testID="header-watchlist-button" onPress={() => router.push("/watchlist")} />
             <AlertsBell />
           </>

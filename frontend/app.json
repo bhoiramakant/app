@@ -52,6 +52,13 @@
         {
           "faceIDPermission": "Unlock SmartTradeLens quickly and securely"
         }
+      ],
+      "expo-sharing",
+      [
+        "expo-notifications",
+        {
+          "color": "#FF8A1F"
+        }
       ]
     ],
     "experiments": {
