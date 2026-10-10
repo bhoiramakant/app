@@ -1,0 +1,41 @@
+{
+  "summary": "Backend 20/20 pytest cases pass against public preview URL. UI: verified sign-in -> PIN setup (set PIN=1234) -> Dashboard renders with real market overview, ready/upcoming counts, and alerts strip. Setups tab verified: strategy chips (MA Crossover), timeframe chips (Weekly), Buy filter, setup cards (AAPL/NVDA shown), orange Trade button opens trade-sheet with 4 options (Robinhood, TradingView, Kite by Zerodha, CoinDCX), setup-card tap navigates to detail. Alerts screen opens from header-alerts-button and 'mark all read' works. Reload -> unlock-screen, wrong PIN shows unlock-error, correct PIN unlocks. Charts/News/Watchlist UI screens were not re-verified due to session loss across browser automation runs (loop-prevention triggered); API endpoints that back them all return 200 OK with correct shape and data. No deprecated expo packages used. One minor dev warning in console: '\"shadow*\" style props are deprecated. Use \"boxShadow\"' (non-blocking).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": [
+      {"component": "StyleSheet shadow props", "issue": "Console warning: '\"shadow*\" style props are deprecated. Use \"boxShadow\".' Appears on initial app load; harmless on native but logs noise on web preview. Likely in a shadow style in src/components (e.g., SetupCard/TradeSheet)."}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "Optional: replace deprecated RN web `shadow*` style props with cross-platform shadow (keep shadow* for native, add boxShadow for web via Platform.select) to silence the console warning.",
+    "Manually verify (or main agent self-test) the three remaining UI screens that could not be re-captured in automation due to session state loss: Charts tab (price-chart + rsi-card render for selected symbol/timeframe), News tab (news-mood-card + news-item-0 after ~20s LLM wait), Watchlist screen (search 'solana', add SOL/CRYPTO, then remove). Their underlying APIs all return correct data (verified via pytest)."
+  ],
+  "critical_code_review_comments": [
+    "server.py uses deprecated FastAPI @app.on_event('startup'|'shutdown'); migrating to lifespan handler is recommended before FastAPI 0.112+ requires it.",
+    "market.av_call sets 'count: 999' when AV returns a rate-limit Note - sentinel works but hides whether we are rate-limited vs 25-call cap in av_budget_left. Consider a separate 'rate_limited_at' field for observability.",
+    "setups endpoint fans out N async get_candles calls with per-key locks - good; but setup_detail re-runs the full setup_for() for every other strategy, triggering extra candle fetches. Cache the candles once per request to avoid duplicate work."
+  ],
+  "updated_files": [
+    "/app/backend/tests/backend_test.py (new)",
+    "/app/test_reports/pytest/pytest_results.xml (new)"
+  ],
+  "success_rate": {
+    "backend": "100% (20/20)",
+    "frontend": "~70% (sign-in, PIN setup, dashboard, setups chips/filters/cards, trade sheet with 4 brokers, setup detail, alerts + mark-all-read, unlock flow all verified; charts/news/watchlist UI not re-captured but their APIs pass)"
+  },
+  "seed_data_creation": "Tests dynamically create short-lived user accounts prefixed with test_ (e.g. test_<hex>@example.com) for register/duplicate assertions. These remain in Mongo (no delete endpoint); harmless. No new watchlist stock symbols were added - only a transient DOGE CRYPTO add/remove to respect AV budget. AV budget currently 7 calls left (started at 8).",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Alpha Vantage budget resets daily; if < 2 calls left avoid any stock-adding tests. Browser automation runs lose storage between invocations - treat each run as fresh (expect sign-in screen first, then pin-setup, not unlock). To navigate between tabs via Playwright, use direct URL navigation (page.goto base + '/charts' | '/news' | '/setups') AFTER completing login+PIN+skip-biometric, since expo-router tabs aren't rendered as plain <a href> anchors on web preview. The seed account trader@smarttradelens.app / Trader@123 is already registered - running register with it returns 409.",
+  "rca_of_issue": "No app bugs found. The only lingering uncertainty is UI confirmation of Charts/News/Watchlist tabs. Root cause for not capturing them: (1) browser automation tool starts a fresh page context on each invocation, so prior PIN/session is wiped; (2) expo-router web tab bar does not expose <a href> elements, so goto_tab-by-anchor failed. Mitigation applied: switched to direct URL navigation (page.goto('.../charts')) after re-doing login+PIN - but hit 3-attempt loop-prevention before completing. All three screens' backend endpoints are verified green by pytest (GET /api/chart/{id}?timeframe=daily returns ok+candles, GET /api/news returns 200 within ~20s, GET /api/symbols/search?q=... returns results, POST /api/watchlist add + DELETE /api/watchlist/{id} both green)."
+}

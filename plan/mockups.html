@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SmartTradeLens — Screen Mockups</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#0B0D10; --surface:#14171C; --surface2:#1B1F26; --line:#262B33;
+    --text:#F2F3F5; --muted:#8A93A0; --orange:#FF8A1F; --orange2:#FF9933;
+    --green:#22C55E; --red:#EF4444; --amber:#F5B83D;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#050608;color:var(--text);font-family:Manrope,sans-serif;padding:40px 24px}
+  h1{font-size:28px;font-weight:800;margin-bottom:6px}
+  h1 span{color:var(--orange)}
+  .sub{color:var(--muted);margin-bottom:36px;font-size:14px}
+  .grid{display:flex;flex-wrap:wrap;gap:36px}
+  .wrap{display:flex;flex-direction:column;gap:12px;align-items:center}
+  .label{font-weight:700;font-size:14px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+  .phone{width:330px;height:700px;background:var(--bg);border-radius:38px;border:8px solid #1f2329;position:relative;overflow:hidden;display:flex;flex-direction:column}
+  .status{height:28px;display:flex;justify-content:space-between;align-items:center;padding:0 20px;font-size:11px;color:var(--muted);font-family:'JetBrains Mono'}
+  .header{padding:6px 18px 10px;display:flex;justify-content:space-between;align-items:center}
+  .header h2{font-size:22px;font-weight:800}
+  .icons{display:flex;gap:10px}
+  .ic{width:34px;height:34px;border-radius:12px;background:var(--surface);display:flex;align-items:center;justify-content:center;position:relative;font-size:14px;color:var(--muted)}
+  .badge{position:absolute;top:-3px;right:-3px;background:var(--orange);color:#111;font-size:9px;font-weight:800;border-radius:8px;padding:1px 5px}
+  .content{flex:1;overflow:hidden;padding:0 14px}
+  .chips{display:flex;gap:8px;overflow:hidden;padding:4px 14px 8px;flex-shrink:0}
+  .chip{flex-shrink:0;height:32px;padding:0 14px;border-radius:16px;border:1px solid var(--line);display:flex;align-items:center;font-size:12px;font-weight:600;color:var(--muted);background:var(--surface)}
+  .chip.on{background:rgba(255,138,31,.14);border-color:var(--orange);color:var(--orange)}
+  .seg{display:flex;background:var(--surface);border-radius:12px;padding:3px;margin:0 14px 10px}
+  .seg div{flex:1;text-align:center;font-size:12px;font-weight:700;padding:7px 0;border-radius:9px;color:var(--muted)}
+  .seg .on{background:var(--surface2);color:var(--text)}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:10px}
+  .card.ready{border-color:rgba(255,138,31,.55);box-shadow:0 0 0 1px rgba(255,138,31,.15) inset}
+  .row{display:flex;justify-content:space-between;align-items:center}
+  .sym{font-weight:800;font-size:16px}
+  .mkt{font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.05em;margin-left:6px;padding:2px 6px;border-radius:6px;background:var(--surface2)}
+  .price{font-family:'JetBrains Mono';font-size:14px;font-weight:700}
+  .chg{font-family:'JetBrains Mono';font-size:11px}
+  .up{color:var(--green)} .dn{color:var(--red)}
+  .tags{display:flex;gap:6px;margin:10px 0;flex-wrap:wrap}
+  .tag{font-size:10px;font-weight:800;padding:4px 8px;border-radius:8px;letter-spacing:.03em}
+  .bull{background:rgba(34,197,94,.13);color:var(--green)}
+  .bear{background:rgba(239,68,68,.13);color:var(--red)}
+  .rdy{background:var(--orange);color:#140a00}
+  .term{background:var(--surface2);color:var(--muted)}
+  .soon{background:rgba(245,184,61,.13);color:var(--amber)}
+  .check{font-size:11.5px;color:var(--muted);display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+  .check b{display:inline-block;width:16px;font-weight:800}
+  .ok{color:var(--green)} .no{color:var(--red)}
+  .btns{display:flex;gap:8px}
+  .btn{flex:1;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .btn.tr{background:var(--orange);color:#140a00}
+  .btn.tv{background:var(--surface2);color:var(--text);border:1px solid var(--line)}
+  .tabbar{height:64px;border-top:1px solid var(--line);background:#0E1014;display:flex;justify-content:space-around;align-items:center;flex-shrink:0}
+  .tab{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-weight:700;color:#5C6470}
+  .tab i{font-style:normal;font-size:16px}
+  .tab.on{color:var(--orange)}
+  .tab.on i{background:rgba(255,138,31,.14);padding:2px 14px;border-radius:12px}
+  .mini{font-size:11px;color:var(--muted)}
+  .big{font-size:30px;font-weight:800;font-family:'JetBrains Mono'}
+  .tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+  .tile{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px}
+  .tile .n{font-weight:800;font-size:13px}
+  .alert{display:flex;gap:10px;padding:12px;background:var(--surface);border-radius:14px;border-left:3px solid var(--orange);margin-bottom:8px}
+  .alert .t{font-size:12px;font-weight:700;margin-bottom:3px}
+  .alert .d{font-size:11px;color:var(--muted);line-height:1.4}
+  .sect{font-size:12px;font-weight:800;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:12px 2px 8px}
+  .lock{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px}
+  .fp{width:96px;height:96px;border-radius:48px;border:2px solid var(--orange);display:flex;align-items:center;justify-content:center;font-size:40px;color:var(--orange);box-shadow:0 0 40px rgba(255,138,31,.25)}
+  .dots{display:flex;gap:14px}.dots span{width:14px;height:14px;border-radius:7px;border:2px solid var(--line)}.dots .f{background:var(--orange);border-color:var(--orange)}
+  .pad{display:grid;grid-template-columns:repeat(3,64px);gap:12px}
+  .pad div{height:56px;border-radius:28px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;font-family:'JetBrains Mono'}
+  .sheetbg{position:absolute;inset:0;background:rgba(0,0,0,.6)}
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-radius:26px 26px 0 0;padding:12px 16px 24px;border-top:1px solid var(--line)}
+  .grab{width:40px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 14px}
+  .app{display:flex;align-items:center;gap:12px;padding:12px;border-radius:14px;background:var(--surface2);margin-bottom:8px}
+  .logo{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .app .nm{font-weight:700;font-size:14px}.app .st{font-size:11px;color:var(--muted)}
+  .app .go{margin-left:auto;font-size:11px;font-weight:800;color:var(--orange)}
+  .chart{height:220px;background:var(--surface);border-radius:16px;border:1px solid var(--line);margin-bottom:10px;overflow:hidden}
+  .news{padding:12px;background:var(--surface);border-radius:14px;margin-bottom:8px;border:1px solid var(--line)}
+  .news .h{font-size:12.5px;font-weight:700;line-height:1.35;margin:6px 0}
+  .mood{padding:14px;border-radius:16px;background:linear-gradient(135deg,rgba(255,138,31,.16),rgba(255,138,31,.03));border:1px solid rgba(255,138,31,.35);margin-bottom:10px}
+  .bar{height:8px;border-radius:4px;display:flex;overflow:hidden;margin-top:8px}
+  .input{height:48px;border-radius:14px;background:var(--surface);border:1px solid var(--line);display:flex;align-items:center;padding:0 14px;font-size:13px;color:var(--muted);width:100%}
+  .cta{height:50px;border-radius:14px;background:var(--orange);color:#140a00;font-weight:800;display:flex;align-items:center;justify-content:center;width:100%}
+</style>
+</head>
+<body>
+<h1>Smart<span>Trade</span>Lens — Screen Mockups</h1>
+<p class="sub">Dark theme · bhagwa orange accent · Material 3 · illustrative data only</p>
+
+<div class="grid">
+
+<!-- 1. LOGIN -->
+<div class="wrap"><div class="label">1 · Sign in</div>
+<div class="phone">
+  <div class="status"><span>9:41</span><span>▮▮▮ 5G</span></div>
+  <div class="lock" style="justify-content:flex-start;padding-top:70px">
+    <svg width="92" height="92" viewBox="0 0 100 100">
+      <circle cx="44" cy="44" r="30" fill="none" stroke="#FF8A1F" stroke-width="7"/>
+      <line x1="66" y1="66" x2="88" y2="88" stroke="#FF8A1F" stroke-width="9" stroke-linecap="round"/>
+      <path d="M56 28 C40 20 28 30 36 40 C44 50 56 46 52 58 C48 68 34 64 30 58" fill="none" stroke="#FF9933" stroke-width="6" stroke-linecap="round"/>
+      <polyline points="24,60 36,50 46,54 62,34" fill="none" stroke="#22C55E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div style="font-size:24px;font-weight:800">Smart<span style="color:var(--orange)">Trade</span>Lens</div>
+    <div class="mini" style="margin-bottom:20px">Spot setups. Trade with clarity.</div>
+    <div class="input">Email</div>
+    <div class="input">Password</div>
+    <div class="cta" style="margin-top:8px">Sign in</div>
+    <div class="mini">New here? <span style="color:var(--orange);font-weight:700">Create account</span></div>
+  </div>
+</div></div>
+
+<!-- 2. UNLOCK -->
+<div class="wrap"><div class="label">2 · Fingerprint / PIN unlock</div>
+<div class="phone">
+  <div class="status"><span>9:41</span><span>▮▮▮ 5G</span></div>
+  <div class="lock">
+    <div style="font-size:18px;font-weight:800">Welcome back</div>
+    <div class="mini">Touch the sensor to unlock</div>
+    <div class="fp">◉</div>
+    <div class="mini" style="margin-top:6px">or enter PIN</div>
+    <div class="dots"><span class="f"></span><span class="f"></span><span></span><span></span></div>
+    <div class="pad">
+      <div>1</div><div>2</div><div>3</div><div>4</div><div>5</div><div>6</div><div>7</div><div>8</div><div>9</div><div style="background:none"></div><div>0</div><div style="background:none;font-size:14px;color:var(--muted)">⌫</div>
+    </div>
+  </div>
+</div></div>
+
+<!-- 3. DASHBOARD -->
+<div class="wrap"><div class="label">3 · Dashboard</div>
+<div class="phone">
+  <div class="status"><span>9:41</span><span>▮▮▮ 5G</span></div>
+  <div class="header"><h2>Dashboard</h2><div class="icons"><div class="ic">🔔<span class="badge">3</span></div><div class="ic">⚙</div></div></div>
+  <div class="content">
+    <div class="card ready" style="display:flex;justify-content:space-between;align-items:center">
+      <div><div class="mini">Setups ready today</div><div class="big" style="color:var(--orange)">4</div><div class="mini">2 upcoming · 9 watching</div></div>
+      <div class="btn tr" style="flex:none;padding:0 16px">View setups →</div>
+    </div>
+    <div class="sect">Market overview</div>
+    <div class="tiles">
+      <div class="tile"><div class="mini">S&amp;P 500</div><div class="n">5,842.1</div><div class="chg up">+0.84%</div></div>
+      <div class="tile"><div class="mini">SENSEX</div><div class="n">81,204</div><div class="chg dn">−0.31%</div></div>
+      <div class="tile"><div class="mini">BTC</div><div class="n">$104,320</div><div class="chg up">+2.10%</div></div>
+      <div class="tile"><div class="mini">ETH</div><div class="n">$3,912</div><div class="chg up">+1.45%</div></div>
+    </div>
+    <div class="sect">AI agent · latest</div>
+    <div class="alert"><div><div class="t">BTC · Daily Super Trend flipped bullish</div><div class="d">Setup ready. Consider long entry; invalidates below $99,800.</div></div></div>
+    <div class="alert" style="border-left-color:var(--amber)"><div><div class="t">INFY · MA crossover forming</div><div class="d">20 MA 0.4% below 50 MA. Likely cross in 1–2 sessions.</div></div></div>
+  </div>
+  <div class="tabbar"><div class="tab on"><i>▦</i>Dashboard</div><div class="tab"><i>◎</i>Setups</div><div class="tab"><i>📈</i>Charts</div><div class="tab"><i>📰</i>News</div></div>
+</div></div>
+
+<!-- 4. SETUPS -->
+<div class="wrap"><div class="label">4 · Trade Setups</div>
+<div class="phone">
+  <div class="status"><span>9:41</span><span>▮▮▮ 5G</span></div>
+  <div class="header"><h2>Setups</h2><div class="icons"><div class="ic">＋</div><div class="ic">🔔<span class="badge">3</span></div></div></div>
+  <div class="chips"><div class="chip on">Super Trend</div><div class="chip">MA Crossover</div><div class="chip">Option Selling</div></div>
+  <div class="chips" style="padding-top:0"><div class="chip">Hourly</div><div class="chip on">Daily</div><div class="chip">Weekly</div><div class="chip">Monthly</div></div>
+  <div class="seg"><div class="on">All</div><div>Buy</div><div>Sell</div></div>
+  <div class="content">
+    <div class="card ready">
+      <div class="row"><div><span class="sym">BTC</span><span class="mkt">CRYPTO</span></div><div style="text-align:right"><div class="price">$104,320</div><div class="chg up">+2.10%</div></div></div>
+      <div class="tags"><span class="tag bull">▲ BULLISH</span><span class="tag rdy">● SETUP READY</span><span class="tag term">SHORT-TERM</span></div>
+      <div class="check">
+        <div><b class="ok">✓</b>Price closed above Super Trend (10, 3)</div>
+        <div><b class="ok">✓</b>RSI 58 — between 50 and 70</div>
+        <div><b class="ok">✓</b>Volume above 20-day average</div>
+      </div>
+      <div class="btns"><div class="btn tr">Trade</div><div class="btn tv">Open in TradingView</div></div>
+    </div>
+    <div class="card">
+      <div class="row"><div><span class="sym">TSLA</span><span class="mkt">US</span></div><div style="text-align:right"><div class="price">$248.70</div><div class="chg dn">−1.32%</div></div></div>
+      <div class="tags"><span class="tag bear">▼ BEARISH</span><span class="tag soon">⏳ UPCOMING · 1 left</span><span class="tag term">SHORT-TERM</span></div>
+      <div class="check">
+        <div><b class="ok">✓</b>Price below Super Trend</div>
+        <div><b class="no">✗</b>RSI 44 — needs below 40</div>
+      </div>
+    </div>
+  </div>
+  <div class="tabbar"><div class="tab"><i>▦</i>Dashboard</div><div class="tab on"><i>◎</i>Setups</div><div class="tab"><i>📈</i>Charts</div><div class="tab"><i>📰</i>News</div></div>
+</div></div>
+
+<!-- 5. TRADE SHEET -->
+<div class="wrap"><div class="label">5 · Trade bottom sheet</div>
+<div class="phone">
+  <div class="status"><span>9:41</span><span>▮▮▮ 5G</span></div>
+  <div class="header"><h2>Setups</h2></div>
+  <div class="content"><div class="card ready" style="opacity:.6"><div class="row"><span class="sym">BTC</span><span class="price">$104,320</span></div></div></div>
+  <div class="sheetbg"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <div style="font-size:17px;font-weight:800">Trade BTC</div>
+    <div class="mini" style="margin-bottom:14px">Choose where to open this setup</div>
+    <div class="app"><div class="logo" style="background:#CCFF00;color:#111">RH</div><div><div class="nm">Robinhood</div><div class="st">Installed</div></div><div class="go">OPEN →</div></div>
+    <div class="app"><div class="logo" style="background:#2453FF;color:#fff">CD</div><div><div class="nm">CoinDCX</div><div class="st">Installed</div></div><div class="go">OPEN →</div></div>
+    <div class="app"><div class="logo" style="background:#FF5722;color:#fff">K</div><div><div class="nm">Kite by Zerodha</div><div class="st">Not installed</div></div><div class="go" style="color:var(--muted)">PLAY STORE ↗</div></div>
+    <div class="app"><div class="logo" style="background:#131722;color:#fff;border:1px solid #333">TV</div><div><div class="nm">TradingView</div><div class="st">Opens BTCUSD chart</div></div><div class="go">OPEN →</div></div>
+    <div class="mini" style="text-align:center;margin-top:8px">For analysis only · not financial advice</div>
+  </div>
+</div></div>
+
+<!-- 6. CHARTS -->
+<div class="wrap"><div class="label">6 · Charts</div>
+<div class="phone">
+  <div class="status"><span>9:41</span><span>▮▮▮ 5G</span></div>
+  <div class="header"><div><h2>INFY <span class="mkt">BSE</span></h2><div class="price" style="margin-top:4px">₹1,862.40 <span class="chg up">+0.92%</span></div></div><div class="icons"><div class="ic">⌕</div></div></div>
+  <div class="chips"><div class="chip">1H</div><div class="chip on">1D</div><div class="chip">1W</div><div class="chip">1M</div></div>
+  <div class="content">
+    <div class="chart">
+      <svg width="100%" height="220" viewBox="0 0 300 220" preserveAspectRatio="none">
+        <polyline points="0,160 25,150 50,155 75,135 100,140 125,120 150,125 175,100 200,108 225,85 250,90 275,70 300,62" fill="none" stroke="#F2F3F5" stroke-width="2"/>
+        <polyline points="0,185 75,175 150,150 225,118 300,92" fill="none" stroke="#22C55E" stroke-width="2" stroke-dasharray="4 3"/>
+        <polyline points="0,150 75,148 150,135 225,110 300,85" fill="none" stroke="#FF8A1F" stroke-width="1.6"/>
+        <polyline points="0,165 75,160 150,145 225,125 300,105" fill="none" stroke="#5B8CFF" stroke-width="1.6"/>
+      </svg>
+    </div>
+    <div class="row mini" style="margin-bottom:10px"><span style="color:var(--green)">— Super Trend</span><span style="color:var(--orange)">— MA 20</span><span style="color:#5B8CFF">— MA 50</span></div>
+    <div class="card"><div class="row"><span class="mini">RSI (14)</span><span class="price">61.2</span></div>
+      <div class="bar" style="background:var(--surface2)"><div style="width:61%;background:var(--orange)"></div></div></div>
+    <div class="mini">Last updated 08:30 · cached</div>
+  </div>
+  <div class="tabbar"><div class="tab"><i>▦</i>Dashboard</div><div class="tab"><i>◎</i>Setups</div><div class="tab on"><i>📈</i>Charts</div><div class="tab"><i>📰</i>News</div></div>
+</div></div>
+
+<!-- 7. NEWS -->
+<div class="wrap"><div class="label">7 · News &amp; Sentiment</div>
+<div class="phone">
+  <div class="status"><span>9:41</span><span>▮▮▮ 5G</span></div>
+  <div class="header"><h2>News</h2></div>
+  <div class="content">
+    <div class="mood"><div class="mini" style="color:var(--orange);font-weight:800">AI MARKET MOOD · WATCHLIST</div>
+      <div style="font-size:18px;font-weight:800;margin-top:4px">Mildly Bullish</div>
+      <div class="mini" style="margin-top:4px">Crypto strength and IT earnings offset EV weakness.</div>
+      <div class="bar"><div style="width:55%;background:var(--green)"></div><div style="width:25%;background:#5C6470"></div><div style="width:20%;background:var(--red)"></div></div></div>
+    <div class="news"><span class="tag bull">BULLISH · BTC</span><div class="h">Spot ETF inflows hit three-week high as institutions add exposure</div><div class="mini">AI: sustained inflows support trend continuation · 2h</div></div>
+    <div class="news"><span class="tag bear">BEARISH · TSLA</span><div class="h">Delivery estimates trimmed ahead of quarterly report</div><div class="mini">AI: lowered expectations pressure near-term price · 4h</div></div>
+    <div class="news"><span class="tag term">NEUTRAL · RELIANCE</span><div class="h">Board meeting scheduled; no agenda changes announced</div><div class="mini">AI: no directional catalyst · 6h</div></div>
+  </div>
+  <div class="tabbar"><div class="tab"><i>▦</i>Dashboard</div><div class="tab"><i>◎</i>Setups</div><div class="tab"><i>📈</i>Charts</div><div class="tab on"><i>📰</i>News</div></div>
+</div></div>
+
+<!-- 8. ALERTS -->
+<div class="wrap"><div class="label">8 · AI Agent alerts</div>
+<div class="phone">
+  <div class="status"><span>9:41</span><span>▮▮▮ 5G</span></div>
+  <div class="header"><h2>‹ Alerts</h2><div class="mini" style="color:var(--orange);font-weight:700">Mark all read</div></div>
+  <div class="content">
+    <div class="sect">Today</div>
+    <div class="alert"><div><div class="t">● BTC · Setup ready (Super Trend, Daily)</div><div class="d">What to do: consider a long entry near $104K. Stop below $99,800. Tap to open setup.</div></div></div>
+    <div class="alert" style="border-left-color:var(--red)"><div><div class="t">TSLA · Bearish trend confirmed</div><div class="d">What to do: avoid fresh longs; short setup needs RSI under 40.</div></div></div>
+    <div class="alert" style="border-left-color:var(--amber)"><div><div class="t">INFY · Upcoming MA crossover</div><div class="d">What to do: watch next 1–2 sessions; prepare entry on confirmed cross.</div></div></div>
+    <div class="sect">Yesterday</div>
+    <div class="alert" style="border-left-color:#5C6470;opacity:.7"><div><div class="t">ETH · Option-selling range intact</div><div class="d">Range $3.7K–$4.1K holding; low trend strength.</div></div></div>
+    <div class="mini" style="text-align:center;margin-top:8px">Agent scans: 08:30 · 13:00 · 19:30</div>
+  </div>
+</div></div>
+
+</div>
+</body>
+</html>
